@@ -2,24 +2,22 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Finanzas Daniela - Full Control</title>
+    <title>Finanzas Daniela - v3.0</title>
     <style>
         :root { --primary: #2ecc71; --dark: #1e293b; --bg: #f1f5f9; --tc: #9b59b6; --ocio: #3498db; --fijo: #f1c40f; }
         body { font-family: 'Segoe UI', sans-serif; background: var(--bg); margin: 0; padding: 10px; display: flex; justify-content: center; }
         .app { background: white; width: 100%; max-width: 500px; padding: 20px; border-radius: 25px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); }
         
-        .dashboard { background: var(--dark); color: white; padding: 20px; border-radius: 20px; text-align: center; margin-bottom: 15px; }
-        .dashboard h1 { margin: 5px 0; font-size: 2rem; color: var(--primary); }
+        .dashboard { background: var(--dark); color: white; padding: 30px 20px; border-radius: 20px; text-align: center; margin-bottom: 15px; }
+        .dashboard h1 { margin: 10px 0; font-size: 2.5rem; color: var(--primary); }
         
-        .tabs { display: flex; gap: 5px; margin-bottom: 15px; }
-        .tab-btn { flex: 1; padding: 10px; border: none; border-radius: 10px; cursor: pointer; background: #e2e8f0; font-weight: bold; font-size: 0.8rem; }
+        .tabs { display: grid; grid-template-columns: repeat(2, 1fr); gap: 5px; margin-bottom: 15px; }
+        .tab-btn { padding: 12px; border: none; border-radius: 10px; cursor: pointer; background: #e2e8f0; font-weight: bold; font-size: 0.75rem; }
         .tab-btn.active { background: var(--dark); color: white; }
 
         .view { display: none; }
         .view.active { display: block; }
         
-        .titulo-sec { font-size: 0.85rem; font-weight: bold; color: #64748b; margin: 15px 0 8px; text-transform: uppercase; }
-
         .card { display: flex; justify-content: space-between; align-items: center; background: white; padding: 12px; margin-bottom: 8px; border-radius: 12px; border: 1px solid #f1f5f9; border-left: 5px solid transparent; }
         .card.pagado { background: #ecfdf5; opacity: 0.7; border-color: #a7f3d0; }
         .card.fijo { border-left-color: var(--fijo); }
@@ -34,7 +32,7 @@
         .pagado .btn-pago { background: var(--primary); color: white; }
         
         .form { background: #f8fafc; padding: 15px; border-radius: 15px; margin-bottom: 20px; border: 1px solid #e2e8f0; }
-        input, select { width: 100%; padding: 10px; margin-bottom: 8px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; }
+        input { width: 100%; padding: 10px; margin-bottom: 8px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; }
         .btn-add { width: 100%; padding: 12px; background: var(--dark); color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; }
     </style>
 </head>
@@ -42,49 +40,48 @@
 
 <div class="app">
     <div class="dashboard">
-        <small>Saldo Disponible Real</small>
+        <small style="opacity: 0.7">DISPONIBLE REAL</small>
         <h1 id="txtSaldo">$ 0</h1>
-        <input type="number" id="inSueldo" onchange="actualizarSueldo()" placeholder="Tu Sueldo" style="width:140px; background:rgba(255,255,255,0.1); border:1px solid #475569; color:white; border-radius:5px; text-align:center; padding:5px;">
+        <input type="number" id="inSueldo" onchange="actualizarSueldo()" placeholder="Tu Sueldo Mensual" style="width:160px; background:rgba(255,255,255,0.1); border:1px solid #475569; color:white; border-radius:8px; text-align:center; padding:8px;">
     </div>
 
     <div class="tabs">
-        <button class="tab-btn active" onclick="showView('v-pagos')">Pagos</button>
+        <button class="tab-btn active" onclick="showView('v-fijos')">Fijos</button>
+        <button class="tab-btn" onclick="showView('v-cuotas')">Cuotas</button>
         <button class="tab-btn" onclick="showView('v-ocio')">Ocio</button>
         <button class="tab-btn" onclick="showView('v-nueva-tc')">Nueva TC</button>
     </div>
 
-    <div id="v-pagos" class="view active">
-        <div class="titulo-sec">Fijos Mensuales</div>
+    <div id="v-fijos" class="view active">
         <div id="listaFijos"></div>
-        
-        <div class="titulo-sec">Cuotas Pendientes</div>
+    </div>
+
+    <div id="v-cuotas" class="view">
         <div id="listaCuotas"></div>
-        
-        <button onclick="cerrarMes()" style="width:100%; padding:15px; background:#6366f1; color:white; border:none; border-radius:12px; font-weight:bold; cursor:pointer; margin-top:20px;">✨ CERRAR MES Y SUMAR CUOTAS</button>
+        <button onclick="cerrarMes()" style="width:100%; padding:15px; background:#6366f1; color:white; border:none; border-radius:12px; font-weight:bold; cursor:pointer; margin-top:10px;">✨ CERRAR MES (SUMAR CUOTAS)</button>
     </div>
 
     <div id="v-ocio" class="view">
         <div class="form">
-            <input type="text" id="oD" placeholder="¿En qué gastaste?">
+            <input type="text" id="oD" placeholder="Descripción">
             <input type="number" id="oM" placeholder="Monto $">
-            <button class="btn-add" style="background:var(--ocio)" onclick="addOcio()">Registrar Ocio</button>
+            <button class="btn-add" style="background:var(--ocio)" onclick="addOcio()">Restar del Saldo</button>
         </div>
         <div id="listaOcio"></div>
     </div>
 
     <div id="v-nueva-tc" class="view">
         <div class="form" style="border-color: var(--tc)">
-            <p style="margin-top:0; color:var(--tc)"><b>Programar Compra TC</b></p>
-            <input type="text" id="tD" placeholder="Descripción de la compra">
+            <p style="margin-top:0; color:var(--tc); font-size: 0.8rem;"><b>PROGRAMAR PARA PRÓXIMO MES</b></p>
+            <input type="text" id="tD" placeholder="Compra con Tarjeta">
             <input type="number" id="tM" placeholder="Monto Total">
-            <input type="number" id="tC" placeholder="Número de Cuotas">
-            <button class="btn-add" style="background:var(--tc)" onclick="addTC()">Añadir al próximo mes</button>
+            <input type="number" id="tC" placeholder="Cuotas">
+            <button class="btn-add" style="background:var(--tc)" onclick="addTC()">Guardar en Cola</button>
         </div>
     </div>
 </div>
 
 <script>
-    // 1. GASTOS FIJOS (Nunca se acaban)
     const fijosEstaticos = [
         { id: 'f1', desc: "Spotify", valor: 31000, cuenta: "Dale" },
         { id: 'f2', desc: "Disney +", valor: 47000, cuenta: "Dale" },
@@ -96,7 +93,6 @@
         { id: 'f8', desc: "Cuota Carro", valor: 1945000, cuenta: "Bancolombia" }
     ];
 
-    // 2. DEUDAS POR CUOTAS (Tienen un fin)
     const cuotasBase = [
         { id: 'c1', desc: "Pamacol Technologies", cuota: 281232, total: 4, actual: 1 },
         { id: 'c2', desc: "Metrokia", cuota: 130472, total: 6, actual: 2 },
@@ -104,7 +100,7 @@
         { id: 'c4', desc: "TC Davivienda Reloj", cuota: 119000, total: 12, actual: 1 },
         { id: 'c5', desc: "TC Davivienda Tablet", cuota: 138333, total: 6, actual: 1 },
         { id: 'c6', desc: "TC Exito Computador", cuota: 79583, total: 24, actual: 1 },
-        { id: 'c7', desc: "Rappi Prestamo", cuota: 721500, total: 24, actual: 1 }
+        { id: 'c7', desc: "Rappi Prestamo", cuota: 785300, total: 24, actual: 1 }
     ];
 
     let sueldo = parseFloat(localStorage.getItem('D_Sueldo')) || 0;
@@ -127,7 +123,7 @@
         if(pagados[id]) delete pagados[id];
         else {
             let v = valor;
-            if(variable) v = parseFloat(prompt("Valor de la factura de Luz:", valor)) || valor;
+            if(variable) v = parseFloat(prompt("Valor de la Luz:", valor)) || valor;
             pagados[id] = v;
         }
         save();
@@ -149,16 +145,15 @@
         if(!d || isNaN(m)) return;
         cola.push({ id: 'n'+Date.now(), desc: d, cuota: Math.round(m/c), total: c, actual: 1 });
         localStorage.setItem('D_Cola', JSON.stringify(cola));
-        alert("¡Guardado! Aparecerá al cerrar el mes actual.");
+        alert("¡Guardado! Aparecerá al cerrar el mes.");
     }
 
     function cerrarMes() {
-        if(!confirm("¿Cerrar mes? Esto aumentará el contador de cuotas de tus deudas pagadas.")) return;
+        if(!confirm("¿Cerrar mes? Se restarán cuotas y se borrará el Ocio.")) return;
         deudas = deudas.map(d => {
             if(pagados[d.id]) return { ...d, actual: d.actual + 1 };
             return d;
         }).filter(d => d.actual <= d.total);
-        
         deudas = [...deudas, ...cola];
         cola = []; pagados = {}; ocios = [];
         localStorage.setItem('D_Cola', JSON.stringify(cola));
@@ -183,10 +178,8 @@
         const lc = document.getElementById('listaCuotas');
         const lo = document.getElementById('listaOcio');
         lf.innerHTML = ""; lc.innerHTML = ""; lo.innerHTML = "";
-        
         let gastado = 0;
 
-        // Render Fijos
         fijosEstaticos.forEach(f => {
             const p = pagados[f.id];
             if(p) gastado += p;
@@ -196,7 +189,6 @@
             </div>`;
         });
 
-        // Render Cuotas
         deudas.forEach(d => {
             const p = pagados[d.id];
             if(p) gastado += d.cuota;
@@ -206,7 +198,6 @@
             </div>`;
         });
 
-        // Render Ocio
         ocios.forEach(o => {
             gastado += o.monto;
             lo.innerHTML += `<div class="card ocio"><b>${o.desc}</b> <span>$${o.monto.toLocaleString()}</span></div>`;
