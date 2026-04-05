@@ -2,210 +2,257 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Finanzas Daniela - v3.0</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Finanzas Daniela - Control Total</title>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+    
     <style>
         :root { --primary: #2ecc71; --dark: #1e293b; --bg: #f1f5f9; --tc: #9b59b6; --ocio: #3498db; --fijo: #f1c40f; }
         body { font-family: 'Segoe UI', sans-serif; background: var(--bg); margin: 0; padding: 10px; display: flex; justify-content: center; }
-        .app { background: white; width: 100%; max-width: 500px; padding: 20px; border-radius: 25px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); }
+        .app { background: white; width: 100%; max-width: 500px; padding: 20px; border-radius: 25px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); min-height: 90vh; }
         
-        .dashboard { background: var(--dark); color: white; padding: 30px 20px; border-radius: 20px; text-align: center; margin-bottom: 15px; }
-        .dashboard h1 { margin: 10px 0; font-size: 2.5rem; color: var(--primary); }
+        .dashboard { background: var(--dark); color: white; padding: 25px; border-radius: 20px; text-align: center; margin-bottom: 15px; position: relative; }
+        .dashboard h1 { margin: 10px 0; font-size: 2.2rem; color: var(--primary); }
         
-        .tabs { display: grid; grid-template-columns: repeat(2, 1fr); gap: 5px; margin-bottom: 15px; }
-        .tab-btn { padding: 12px; border: none; border-radius: 10px; cursor: pointer; background: #e2e8f0; font-weight: bold; font-size: 0.75rem; }
+        .tabs { display: flex; gap: 5px; margin-bottom: 15px; overflow-x: auto; padding-bottom: 5px; }
+        .tab-btn { flex: 1; padding: 12px; border: none; border-radius: 10px; cursor: pointer; background: #e2e8f0; font-weight: bold; font-size: 0.75rem; min-width: 85px; }
         .tab-btn.active { background: var(--dark); color: white; }
 
         .view { display: none; }
         .view.active { display: block; }
         
-        .card { display: flex; justify-content: space-between; align-items: center; background: white; padding: 12px; margin-bottom: 8px; border-radius: 12px; border: 1px solid #f1f5f9; border-left: 5px solid transparent; }
-        .card.pagado { background: #ecfdf5; opacity: 0.7; border-color: #a7f3d0; }
-        .card.fijo { border-left-color: var(--fijo); }
-        .card.tc { border-left-color: var(--tc); }
-        .card.ocio { border-left-color: var(--ocio); }
-
-        .info b { display: block; font-size: 0.85rem; color: #1e293b; }
-        .info small { color: #94a3b8; font-size: 0.7rem; }
-        .badge { background: #e0f2fe; color: #075985; padding: 2px 6px; border-radius: 4px; font-size: 0.65rem; font-weight: bold; }
-        
-        .btn-pago { background: #f1f5f9; border: none; padding: 8px; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 0.75rem; min-width: 90px; }
-        .pagado .btn-pago { background: var(--primary); color: white; }
-        
         .form { background: #f8fafc; padding: 15px; border-radius: 15px; margin-bottom: 20px; border: 1px solid #e2e8f0; }
-        input { width: 100%; padding: 10px; margin-bottom: 8px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; }
-        .btn-add { width: 100%; padding: 12px; background: var(--dark); color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; }
+        input { width: 100%; padding: 12px; margin-bottom: 10px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; font-size: 1rem; }
+        .btn-add { width: 100%; padding: 14px; background: var(--dark); color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 1rem; }
+        
+        .card { display: flex; justify-content: space-between; align-items: center; background: white; padding: 15px; margin-bottom: 10px; border-radius: 12px; border: 1px solid #f1f5f9; border-left: 6px solid #ddd; }
+        .card.fijo { border-left-color: var(--fijo); }
+        .card.cuota { border-left-color: var(--tc); }
+        .card.pagado { background: #ecfdf5; opacity: 0.6; border-color: #a7f3d0; }
+        
+        .info b { display: block; font-size: 0.9rem; color: #1e293b; }
+        .info small { color: #94a3b8; font-size: 0.75rem; }
+        
+        .btn-check { background: #f1f5f9; border: none; padding: 8px 12px; border-radius: 8px; cursor: pointer; font-weight: bold; }
+        .pagado .btn-check { background: var(--primary); color: white; }
+
+        #login-screen { text-align: center; padding: 50px 10px; }
+        .loader { border: 4px solid #f3f3f3; border-top: 4px solid var(--primary); border-radius: 50%; width: 30px; height: 30px; animation: spin 1s linear infinite; margin: 20px auto; display: none; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     </style>
 </head>
 <body>
 
 <div class="app">
-    <div class="dashboard">
-        <small style="opacity: 0.7">DISPONIBLE REAL</small>
-        <h1 id="txtSaldo">$ 0</h1>
-        <input type="number" id="inSueldo" onchange="actualizarSueldo()" placeholder="Tu Sueldo Mensual" style="width:160px; background:rgba(255,255,255,0.1); border:1px solid #475569; color:white; border-radius:8px; text-align:center; padding:8px;">
-    </div>
-
-    <div class="tabs">
-        <button class="tab-btn active" onclick="showView('v-fijos')">Fijos</button>
-        <button class="tab-btn" onclick="showView('v-cuotas')">Cuotas</button>
-        <button class="tab-btn" onclick="showView('v-ocio')">Ocio</button>
-        <button class="tab-btn" onclick="showView('v-nueva-tc')">Nueva TC</button>
-    </div>
-
-    <div id="v-fijos" class="view active">
-        <div id="listaFijos"></div>
-    </div>
-
-    <div id="v-cuotas" class="view">
-        <div id="listaCuotas"></div>
-        <button onclick="cerrarMes()" style="width:100%; padding:15px; background:#6366f1; color:white; border:none; border-radius:12px; font-weight:bold; cursor:pointer; margin-top:10px;">✨ CERRAR MES (SUMAR CUOTAS)</button>
-    </div>
-
-    <div id="v-ocio" class="view">
-        <div class="form">
-            <input type="text" id="oD" placeholder="Descripción">
-            <input type="number" id="oM" placeholder="Monto $">
-            <button class="btn-add" style="background:var(--ocio)" onclick="addOcio()">Restar del Saldo</button>
+    <div id="login-screen">
+        <h2 style="color: var(--dark)">Control de Finanzas</h2>
+        <p style="color: #64748b">Ingresa para ver tu lista privada</p>
+        <div style="margin-top: 30px;">
+            <input type="email" id="email" placeholder="Correo electrónico">
+            <input type="password" id="password" placeholder="Tu contraseña">
+            <button class="btn-add" onclick="login()">Iniciar Sesión</button>
+            <div id="loader" class="loader"></div>
         </div>
-        <div id="listaOcio"></div>
     </div>
 
-    <div id="v-nueva-tc" class="view">
-        <div class="form" style="border-color: var(--tc)">
-            <p style="margin-top:0; color:var(--tc); font-size: 0.8rem;"><b>PROGRAMAR PARA PRÓXIMO MES</b></p>
-            <input type="text" id="tD" placeholder="Compra con Tarjeta">
-            <input type="number" id="tM" placeholder="Monto Total">
-            <input type="number" id="tC" placeholder="Cuotas">
-            <button class="btn-add" style="background:var(--tc)" onclick="addTC()">Guardar en Cola</button>
+    <div id="main-app" style="display: none;">
+        <div class="dashboard">
+            <small style="opacity: 0.8">DISPONIBLE REAL</small>
+            <h1 id="txtSaldo">$ 0</h1>
+            <div style="display: flex; gap: 5px; justify-content: center; align-items: center;">
+                <input type="number" id="inSueldo" placeholder="Sueldo" style="width:130px; background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.2); color:white; margin:0; text-align:center;">
+                <button onclick="saveSueldo()" style="background:var(--primary); border:none; color:white; padding:10px; border-radius:8px; cursor:pointer; font-weight:bold;">✔</button>
+            </div>
+            <button onclick="logout()" style="margin-top:15px; background:none; border:none; color:#ff7675; cursor:pointer; font-size:0.8rem; font-weight:bold;">[ CERRAR SESIÓN ]</button>
+        </div>
+
+        <div class="tabs">
+            <button class="tab-btn active" onclick="showView('v-list', this)">Mis Pagos</button>
+            <button class="tab-btn" onclick="showView('v-add', this)">+ Nuevo</button>
+            <button class="tab-btn" onclick="showView('v-config', this)">Ajustes</button>
+        </div>
+
+        <div id="v-list" class="view active">
+            <div id="listaContenido"></div>
+            <button onclick="cerrarMes()" style="width:100%; padding:15px; background:#6366f1; color:white; border:none; border-radius:12px; font-weight:bold; cursor:pointer; margin-top:20px;">✨ CERRAR MES Y AVANZAR CUOTAS</button>
+        </div>
+
+        <div id="v-add" class="view">
+            <div class="form">
+                <h3>Añadir Gasto</h3>
+                <select id="tipoGasto" style="width:100%; padding:12px; margin-bottom:10px; border-radius:8px; border:1px solid #ddd;">
+                    <option value="fijo">Gasto Fijo (Mensual)</option>
+                    <option value="cuota">Deuda por Cuotas (Temporal)</option>
+                </select>
+                <input type="text" id="gDesc" placeholder="Descripción (ej. Cuota Carro)">
+                <input type="number" id="gMonto" placeholder="Monto $">
+                <input type="text" id="gExtra" placeholder="Extra (ej. Cuenta o Banco)">
+                <div id="divCuotas" style="display:none;">
+                    <input type="number" id="gTotal" placeholder="Total de cuotas">
+                    <input type="number" id="gActual" placeholder="Cuota actual">
+                </div>
+                <button class="btn-add" onclick="saveItem()">Guardar en la Nube</button>
+            </div>
+        </div>
+
+        <div id="v-config" class="view">
+            <div class="form">
+                <p><b>Zona de Peligro</b></p>
+                <button onclick="clearAll()" style="background:#ff7675; color:white; border:none; padding:10px; border-radius:8px; width:100%; cursor:pointer;">Borrar todos mis datos</button>
+            </div>
         </div>
     </div>
 </div>
 
 <script>
-    const fijosEstaticos = [
-        { id: 'f1', desc: "Spotify", valor: 31000, cuenta: "Dale" },
-        { id: 'f2', desc: "Disney +", valor: 47000, cuenta: "Dale" },
-        { id: 'f3', desc: "Apple Cloud", valor: 45000, cuenta: "Dale" },
-        { id: 'f4', desc: "Internet", valor: 100000, cuenta: "DaviPlata" },
-        { id: 'f5', desc: "Administración", valor: 50000, cuenta: "DaviPlata" },
-        { id: 'f6', desc: "Claro", valor: 38200, cuenta: "Nequi" },
-        { id: 'f7', desc: "Luz", valor: 76600, cuenta: "Nequi", variable: true },
-        { id: 'f8', desc: "Cuota Carro", valor: 1945000, cuenta: "Bancolombia" }
-    ];
+    // CONFIGURACIÓN DE FIREBASE
+    const firebaseConfig = {
+        apiKey: "AIzaSyCK-3pbwqS7QkExbTuT8bLmVKMlqO-govk",
+        authDomain: "appd-111a4.firebaseapp.com",
+        projectId: "appd-111a4",
+        storageBucket: "appd-111a4.firebasestorage.app",
+        messagingSenderId: "935117162187",
+        appId: "1:935117162187:web:085da4da7cde9ef854fd4e"
+    };
 
-    const cuotasBase = [
-        { id: 'c1', desc: "Pamacol Technologies", cuota: 281232, total: 4, actual: 1 },
-        { id: 'c2', desc: "Metrokia", cuota: 130472, total: 6, actual: 2 },
-        { id: 'c3', desc: "Iberia", cuota: 152951, total: 24, actual: 1 },
-        { id: 'c4', desc: "TC Davivienda Reloj", cuota: 119000, total: 12, actual: 1 },
-        { id: 'c5', desc: "TC Davivienda Tablet", cuota: 138333, total: 6, actual: 1 },
-        { id: 'c6', desc: "TC Exito Computador", cuota: 79583, total: 24, actual: 1 },
-        { id: 'c7', desc: "Rappi Prestamo", cuota: 785300, total: 24, actual: 1 }
-    ];
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+    const db = firebase.firestore();
 
-    let sueldo = parseFloat(localStorage.getItem('D_Sueldo')) || 0;
-    let deudas = JSON.parse(localStorage.getItem('D_Deudas')) || cuotasBase;
-    let ocios = JSON.parse(localStorage.getItem('D_Ocios')) || [];
-    let pagados = JSON.parse(localStorage.getItem('D_Pagados')) || {};
-    let cola = JSON.parse(localStorage.getItem('D_Cola')) || [];
+    let currentUser = null;
+    let pagadosLocal = {};
 
-    document.getElementById('inSueldo').value = sueldo;
-    actualizarApp();
+    // LOGIN
+    function login() {
+        const e = document.getElementById('email').value;
+        const p = document.getElementById('password').value;
+        if(!e || !p) return alert("Completa los datos");
+        document.getElementById('loader').style.display = 'block';
+        auth.signInWithEmailAndPassword(e, p).catch(err => {
+            alert("Error: " + err.message);
+            document.getElementById('loader').style.display = 'none';
+        });
+    }
 
-    function showView(id) {
+    function logout() { auth.signOut(); }
+
+    // DETECTAR USUARIO
+    auth.onAuthStateChanged(user => {
+        if (user) {
+            currentUser = user;
+            document.getElementById('login-screen').style.display = 'none';
+            document.getElementById('main-app').style.display = 'block';
+            loadData();
+        } else {
+            document.getElementById('login-screen').style.display = 'block';
+            document.getElementById('main-app').style.display = 'none';
+        }
+    });
+
+    // GUARDAR GASTO
+    async function saveItem() {
+        const tipo = document.getElementById('tipoGasto').value;
+        const data = {
+            desc: document.getElementById('gDesc').value,
+            monto: parseFloat(document.getElementById('gMonto').value),
+            extra: document.getElementById('gExtra').value,
+            tipo: tipo,
+            createdAt: Date.now()
+        };
+        if(tipo === 'cuota') {
+            data.total = parseInt(document.getElementById('gTotal').value);
+            data.actual = parseInt(document.getElementById('gActual').value);
+        }
+        await db.collection('usuarios').doc(currentUser.uid).collection('gastos').add(data);
+        alert("¡Guardado!");
+        loadData();
+        showView('v-list', document.querySelector('.tab-btn'));
+    }
+
+    // CARGAR DATOS
+    async function loadData() {
+        // Cargar Sueldo
+        const userDoc = await db.collection('usuarios').doc(currentUser.uid).get();
+        let sueldo = 0;
+        if(userDoc.exists) {
+            sueldo = userDoc.data().sueldo || 0;
+            document.getElementById('inSueldo').value = sueldo;
+        }
+
+        // Cargar Gastos
+        const snapshot = await db.collection('usuarios').doc(currentUser.uid).collection('gastos').get();
+        const container = document.getElementById('listaContenido');
+        container.innerHTML = "";
+        let totalGastado = 0;
+
+        snapshot.forEach(doc => {
+            const g = doc.data();
+            const id = doc.id;
+            const isPagado = pagadosLocal[id];
+            if(isPagado) totalGastado += g.monto;
+
+            container.innerHTML += `
+                <div class="card ${g.tipo} ${isPagado ? 'pagado' : ''}">
+                    <div class="info">
+                        <b>${g.desc}</b>
+                        <small>${g.tipo === 'fijo' ? g.extra : 'Cuota '+g.actual+' de '+g.total}</small>
+                    </div>
+                    <button class="btn-check" onclick="togglePago('${id}')">
+                        $${g.monto.toLocaleString()}
+                    </button>
+                </div>`;
+        });
+
+        const saldo = sueldo - totalGastado;
+        const txt = document.getElementById('txtSaldo');
+        txt.innerText = `$ ${saldo.toLocaleString()}`;
+        txt.style.color = saldo < 0 ? "#ff7675" : "#2ecc71";
+    }
+
+    function togglePago(id) {
+        if(pagadosLocal[id]) delete pagadosLocal[id];
+        else pagadosLocal[id] = true;
+        loadData();
+    }
+
+    async function saveSueldo() {
+        const val = parseFloat(document.getElementById('inSueldo').value);
+        await db.collection('usuarios').doc(currentUser.uid).set({ sueldo: val }, { merge: true });
+        loadData();
+    }
+
+    function showView(id, btn) {
         document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
         document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
         document.getElementById(id).classList.add('active');
-        event.currentTarget.classList.add('active');
+        btn.classList.add('active');
     }
 
-    function gestionarPago(id, valor, variable = false) {
-        if(pagados[id]) delete pagados[id];
-        else {
-            let v = valor;
-            if(variable) v = parseFloat(prompt("Valor de la Luz:", valor)) || valor;
-            pagados[id] = v;
+    // Toggle campos de cuotas
+    document.getElementById('tipoGasto').onchange = function() {
+        document.getElementById('divCuotas').style.display = this.value === 'cuota' ? 'block' : 'none';
+    };
+
+    async function cerrarMes() {
+        if(!confirm("¿Cerrar mes? Las cuotas pagadas aumentarán 1 número.")) return;
+        const snapshot = await db.collection('usuarios').doc(currentUser.uid).collection('gastos').get();
+        
+        for (const doc of snapshot.docs) {
+            const g = doc.data();
+            if(g.tipo === 'cuota' && pagadosLocal[doc.id]) {
+                if(g.actual >= g.total) {
+                    await db.collection('usuarios').doc(currentUser.uid).collection('gastos').doc(doc.id).delete();
+                } else {
+                    await db.collection('usuarios').doc(currentUser.uid).collection('gastos').doc(doc.id).update({
+                        actual: g.actual + 1
+                    });
+                }
+            }
         }
-        save();
-    }
-
-    function addOcio() {
-        const d = document.getElementById('oD').value;
-        const m = parseFloat(document.getElementById('oM').value);
-        if(!d || isNaN(m)) return;
-        ocios.push({id: Date.now(), desc: d, monto: m});
-        document.getElementById('oD').value = ""; document.getElementById('oM').value = "";
-        save();
-    }
-
-    function addTC() {
-        const d = document.getElementById('tD').value;
-        const m = parseFloat(document.getElementById('tM').value);
-        const c = parseInt(document.getElementById('tC').value);
-        if(!d || isNaN(m)) return;
-        cola.push({ id: 'n'+Date.now(), desc: d, cuota: Math.round(m/c), total: c, actual: 1 });
-        localStorage.setItem('D_Cola', JSON.stringify(cola));
-        alert("¡Guardado! Aparecerá al cerrar el mes.");
-    }
-
-    function cerrarMes() {
-        if(!confirm("¿Cerrar mes? Se restarán cuotas y se borrará el Ocio.")) return;
-        deudas = deudas.map(d => {
-            if(pagados[d.id]) return { ...d, actual: d.actual + 1 };
-            return d;
-        }).filter(d => d.actual <= d.total);
-        deudas = [...deudas, ...cola];
-        cola = []; pagados = {}; ocios = [];
-        localStorage.setItem('D_Cola', JSON.stringify(cola));
-        save();
-    }
-
-    function actualizarSueldo() {
-        sueldo = parseFloat(document.getElementById('inSueldo').value) || 0;
-        save();
-    }
-
-    function save() {
-        localStorage.setItem('D_Sueldo', sueldo);
-        localStorage.setItem('D_Deudas', JSON.stringify(deudas));
-        localStorage.setItem('D_Ocios', JSON.stringify(ocios));
-        localStorage.setItem('D_Pagados', JSON.stringify(pagados));
-        actualizarApp();
-    }
-
-    function actualizarApp() {
-        const lf = document.getElementById('listaFijos');
-        const lc = document.getElementById('listaCuotas');
-        const lo = document.getElementById('listaOcio');
-        lf.innerHTML = ""; lc.innerHTML = ""; lo.innerHTML = "";
-        let gastado = 0;
-
-        fijosEstaticos.forEach(f => {
-            const p = pagados[f.id];
-            if(p) gastado += p;
-            lf.innerHTML += `<div class="card fijo ${p?'pagado':''}">
-                <div class="info"><b>${f.desc}</b><small>${f.cuenta}</small></div>
-                <button class="btn-pago" onclick="gestionarPago('${f.id}', ${f.valor}, ${f.variable})">$${(p || f.valor).toLocaleString()}</button>
-            </div>`;
-        });
-
-        deudas.forEach(d => {
-            const p = pagados[d.id];
-            if(p) gastado += d.cuota;
-            lc.innerHTML += `<div class="card tc ${p?'pagado':''}">
-                <div class="info"><b>${d.desc}</b><span class="badge">Cuota ${d.actual} de ${d.total}</span></div>
-                <button class="btn-pago" onclick="gestionarPago('${d.id}', ${d.cuota})">$${d.cuota.toLocaleString()}</button>
-            </div>`;
-        });
-
-        ocios.forEach(o => {
-            gastado += o.monto;
-            lo.innerHTML += `<div class="card ocio"><b>${o.desc}</b> <span>$${o.monto.toLocaleString()}</span></div>`;
-        });
-
-        const saldo = sueldo - gastado;
-        document.getElementById('txtSaldo').innerText = `$ ${saldo.toLocaleString()}`;
-        document.getElementById('txtSaldo').style.color = saldo < 0 ? "#e74c3c" : "#2ecc71";
+        pagadosLocal = {};
+        loadData();
     }
 </script>
 </body>
