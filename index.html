@@ -34,6 +34,7 @@
         
         .actions { display: flex; gap: 8px; }
         .btn-edit { background: #f1f5f9; border: none; padding: 6px; border-radius: 6px; cursor: pointer; }
+        .btn-delete { background: #fee2e2; border: none; padding: 6px; border-radius: 6px; cursor: pointer; color: #ef4444; }
         .btn-check { background: #f1f5f9; border: none; padding: 6px 10px; border-radius: 8px; cursor: pointer; font-weight: bold; }
         .pagado .btn-check { background: var(--primary); color: white; }
 
@@ -155,7 +156,6 @@
         if (!e || !p) return alert("Ingresa correo y contraseña");
 
         try {
-            // Intentar login. Si falla porque no existe el usuario, lo crea.
             await auth.signInWithEmailAndPassword(e, p);
         } catch (error) {
             if (error.code === 'auth/user-not-found' || error.code === 'auth/invalid-credential') {
@@ -242,7 +242,8 @@
                 <div class="card ${g.tipo} ${pagadosLocal[id] ? 'pagado' : ''}">
                     <div style="flex:1"><b>${g.desc}</b><br><small>${g.banco} ${g.tipo==='cuota'?'('+g.cuotaA+'/'+g.cuotasT+')':''}</small></div>
                     <div class="actions">
-                        <button class="btn-edit" onclick="editItem('${id}')">✎</button>
+                        <button class="btn-edit" onclick="editItem('${id}')" title="Editar">✎</button>
+                        <button class="btn-delete" onclick="deleteItem('${id}')" title="Eliminar permanentemente">🗑</button>
                         <button class="btn-check" onclick="togglePago('${id}')">$${Math.round(g.monto).toLocaleString()}</button>
                     </div>
                 </div>`;
@@ -260,6 +261,15 @@
         sTxt.innerText = `$ ${Math.round(saldo).toLocaleString()}`;
         sTxt.style.color = saldo < 0 ? "#e74c3c" : "#2ecc71";
         loadHistory();
+    }
+
+    async function deleteItem(id) {
+        if(confirm("¿Estás segura? Se eliminará el registro de forma permanente de tu lista de gastos.")) {
+            await db.collection('usuarios').doc(currentUser.uid).collection('gastos').doc(id).delete();
+            delete pagadosLocal[id];
+            localStorage.setItem('pagados_fb', JSON.stringify(pagadosLocal));
+            loadData();
+        }
     }
 
     async function editItem(id) {
