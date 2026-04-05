@@ -39,6 +39,8 @@
 
         .report-item { display: flex; justify-content: space-between; padding: 10px; border-bottom: 1px solid #eee; font-size: 0.9rem; }
         .logout-link { color: #ff7675; cursor: pointer; font-size: 0.65rem; display: block; margin-top: 10px; text-decoration: underline; }
+        
+        #auth-container p { font-size: 0.85rem; color: #64748b; margin-bottom: 20px; }
     </style>
 </head>
 <body>
@@ -46,9 +48,10 @@
 <div class="app">
     <div id="auth-container">
         <h2>Finanzas Master</h2>
-        <input type="email" id="email" placeholder="Correo">
-        <input type="password" id="password" placeholder="Clave">
-        <button class="btn-add" onclick="handleAuth()">Ingresar</button>
+        <p>Ingresa tus datos para iniciar sesión o crear una cuenta nueva.</p>
+        <input type="email" id="email" placeholder="Correo electrónico">
+        <input type="password" id="password" placeholder="Contraseña">
+        <button class="btn-add" onclick="handleAuth()">INGRESAR / CREAR CUENTA</button>
     </div>
 
     <div id="main-app" style="display: none;">
@@ -57,7 +60,7 @@
             <h1 id="txtSaldo">$ 0</h1>
             <div style="display: flex; gap: 5px; justify-content: center;">
                 <input type="number" id="inSueldo" style="width:110px; background:rgba(255,255,255,0.1); border:none; color:white; text-align:center; border-radius:5px;">
-                <button onclick="saveSueldo()" style="background:var(--primary); border:none; color:white; padding:5px 10px; border-radius:5px;">✔</button>
+                <button onclick="saveSueldo()" style="background:var(--primary); border:none; color:white; padding:5px 10px; border-radius:5px; cursor:pointer;">✔</button>
             </div>
             <a class="logout-link" onclick="logout()">Cerrar Sesión</a>
         </div>
@@ -72,7 +75,7 @@
 
         <div id="v-list" class="view active">
             <div id="listaPagos"></div>
-            <button onclick="cerrarMes()" style="width:100%; padding:15px; background:#6366f1; color:white; border:none; border-radius:12px; font-weight:bold; margin-top:15px;">CERRAR MES</button>
+            <button onclick="cerrarMes()" style="width:100%; padding:15px; background:#6366f1; color:white; border:none; border-radius:12px; font-weight:bold; margin-top:15px; cursor:pointer;">CERRAR MES</button>
         </div>
 
         <div id="v-ocio" class="view">
@@ -149,12 +152,30 @@
     async function handleAuth() {
         const e = document.getElementById('email').value;
         const p = document.getElementById('password').value;
-        try { await auth.signInWithEmailAndPassword(e, p); } catch { await auth.createUserWithEmailAndPassword(e, p); }
+        if (!e || !p) return alert("Ingresa correo y contraseña");
+
+        try {
+            // Intentar login. Si falla porque no existe el usuario, lo crea.
+            await auth.signInWithEmailAndPassword(e, p);
+        } catch (error) {
+            if (error.code === 'auth/user-not-found' || error.code === 'auth/invalid-credential') {
+                try {
+                    await auth.createUserWithEmailAndPassword(e, p);
+                    alert("¡Cuenta creada y acceso concedido!");
+                } catch (err) { alert("Error: " + err.message); }
+            } else { alert("Error: " + error.message); }
+        }
     }
+
     function logout() { auth.signOut(); location.reload(); }
 
     auth.onAuthStateChanged(user => {
-        if (user) { currentUser = user; document.getElementById('auth-container').style.display='none'; document.getElementById('main-app').style.display='block'; loadData(); }
+        if (user) { 
+            currentUser = user; 
+            document.getElementById('auth-container').style.display='none'; 
+            document.getElementById('main-app').style.display='block'; 
+            loadData(); 
+        }
     });
 
     function checkTipoForm() {
@@ -212,7 +233,6 @@
 
         snap.forEach(doc => {
             const g = doc.data(); const id = doc.id;
-            // Sumar a bancos si está pagado u ocio
             if(g.tipo === 'ocio' || pagadosLocal[id]) {
                 bancosSum[g.banco] = (bancosSum[g.banco] || 0) + g.monto;
                 totalResta += g.monto;
@@ -231,14 +251,14 @@
             else listP.innerHTML += cardHtml;
         });
 
-        // Dibujar reporte bancos
         for(let b in bancosSum) {
             repB.innerHTML += `<div class="report-item"><span>${b}</span><b>$${Math.round(bancosSum[b]).toLocaleString()}</b></div>`;
         }
 
         const saldo = sueldo - totalResta;
-        document.getElementById('txtSaldo').innerText = `$ ${Math.round(saldo).toLocaleString()}`;
-        document.getElementById('txtSaldo').style.color = saldo < 0 ? "#e74c3c" : "#2ecc71";
+        const sTxt = document.getElementById('txtSaldo');
+        sTxt.innerText = `$ ${Math.round(saldo).toLocaleString()}`;
+        sTxt.style.color = saldo < 0 ? "#e74c3c" : "#2ecc71";
         loadHistory();
     }
 
@@ -273,39 +293,26 @@
     function showView(id, btn) { document.querySelectorAll('.view').forEach(v => v.classList.remove('active')); document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active')); document.getElementById(id).classList.add('active'); btn.classList.add('active'); }
 
     async function cerrarMes() {
-        const mesNombre = prompt("¿Cómo quieres llamar a este histórico? (Ej: Marzo 2026)");
-        if(!mesNombre) return;
-
+        const m = prompt("Nombre para este histórico (Ej: Marzo 2026):");
+        if(!m) return;
         const snap = await db.collection('usuarios').doc(currentUser.uid).collection('gastos').get();
-        let totalMes = 0;
-        let detalles = [];
+        let tM = 0; let dts = [];
 
         for (const doc of snap.docs) {
             const g = doc.data();
             if(g.tipo === 'ocio' || pagadosLocal[doc.id]) {
-                totalMes += g.monto;
-                detalles.push(`${g.desc}: $${Math.round(g.monto)}`);
+                tM += g.monto;
+                dts.push(`${g.desc}: $${Math.round(g.monto)}`);
             }
-            // Avanzar cuotas
             if(g.tipo === 'cuota' && pagadosLocal[doc.id]) {
                 if(g.cuotaA >= g.cuotasT) await db.collection('usuarios').doc(currentUser.uid).collection('gastos').doc(doc.id).delete();
                 else await db.collection('usuarios').doc(currentUser.uid).collection('gastos').doc(doc.id).update({ cuotaA: g.cuotaA + 1 });
             }
-            // Borrar ocio al cerrar mes
             if(g.tipo === 'ocio') await db.collection('usuarios').doc(currentUser.uid).collection('gastos').doc(doc.id).delete();
         }
-
-        // Guardar Histórico
-        await db.collection('usuarios').doc(currentUser.uid).collection('historicos').add({
-            mes: mesNombre,
-            total: totalMes,
-            fecha: Date.now(),
-            resumen: detalles.slice(0, 5).join(", ") + "..." 
-        });
-
+        await db.collection('usuarios').doc(currentUser.uid).collection('historicos').add({ mes: m, total: tM, fecha: Date.now(), resumen: dts.slice(0, 5).join(", ") + "..." });
         pagadosLocal = {}; localStorage.setItem('pagados_fb', JSON.stringify(pagadosLocal));
-        loadData();
-        alert("Mes cerrado y guardado en histórico.");
+        loadData(); alert("Mes guardado.");
     }
 
     async function loadHistory() {
