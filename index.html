@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Finanzas Daniela - Control Total</title>
+    <title>Finanzas Master - Registro Libre</title>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
@@ -13,7 +13,7 @@
         body { font-family: 'Segoe UI', sans-serif; background: var(--bg); margin: 0; padding: 10px; display: flex; justify-content: center; }
         .app { background: white; width: 100%; max-width: 500px; padding: 20px; border-radius: 25px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); min-height: 90vh; }
         
-        .dashboard { background: var(--dark); color: white; padding: 25px; border-radius: 20px; text-align: center; margin-bottom: 15px; position: relative; }
+        .dashboard { background: var(--dark); color: white; padding: 25px; border-radius: 20px; text-align: center; margin-bottom: 15px; }
         .dashboard h1 { margin: 10px 0; font-size: 2.2rem; color: var(--primary); }
         
         .tabs { display: flex; gap: 5px; margin-bottom: 15px; overflow-x: auto; padding-bottom: 5px; }
@@ -23,91 +23,78 @@
         .view { display: none; }
         .view.active { display: block; }
         
-        .form { background: #f8fafc; padding: 15px; border-radius: 15px; margin-bottom: 20px; border: 1px solid #e2e8f0; }
-        input { width: 100%; padding: 12px; margin-bottom: 10px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; font-size: 1rem; }
+        input, select { width: 100%; padding: 12px; margin-bottom: 10px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; font-size: 1rem; }
         .btn-add { width: 100%; padding: 14px; background: var(--dark); color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 1rem; }
+        .btn-alt { width: 100%; padding: 10px; background: none; border: 1px solid var(--dark); color: var(--dark); border-radius: 8px; margin-top: 10px; cursor: pointer; font-weight: bold; }
         
         .card { display: flex; justify-content: space-between; align-items: center; background: white; padding: 15px; margin-bottom: 10px; border-radius: 12px; border: 1px solid #f1f5f9; border-left: 6px solid #ddd; }
         .card.fijo { border-left-color: var(--fijo); }
         .card.cuota { border-left-color: var(--tc); }
         .card.pagado { background: #ecfdf5; opacity: 0.6; border-color: #a7f3d0; }
         
-        .info b { display: block; font-size: 0.9rem; color: #1e293b; }
-        .info small { color: #94a3b8; font-size: 0.75rem; }
-        
         .btn-check { background: #f1f5f9; border: none; padding: 8px 12px; border-radius: 8px; cursor: pointer; font-weight: bold; }
         .pagado .btn-check { background: var(--primary); color: white; }
 
-        #login-screen { text-align: center; padding: 50px 10px; }
-        .loader { border: 4px solid #f3f3f3; border-top: 4px solid var(--primary); border-radius: 50%; width: 30px; height: 30px; animation: spin 1s linear infinite; margin: 20px auto; display: none; }
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        #auth-container { text-align: center; padding: 40px 10px; }
     </style>
 </head>
 <body>
 
 <div class="app">
-    <div id="login-screen">
-        <h2 style="color: var(--dark)">Control de Finanzas</h2>
-        <p style="color: #64748b">Ingresa para ver tu lista privada</p>
-        <div style="margin-top: 30px;">
-            <input type="email" id="email" placeholder="Correo electrónico">
-            <input type="password" id="password" placeholder="Tu contraseña">
-            <button class="btn-add" onclick="login()">Iniciar Sesión</button>
-            <div id="loader" class="loader"></div>
-        </div>
+    <div id="auth-container">
+        <h2 id="auth-title">Bienvenido</h2>
+        <p id="auth-desc" style="color: #64748b; margin-bottom: 20px;">Ingresa a tus finanzas</p>
+        
+        <input type="email" id="email" placeholder="Correo electrónico">
+        <input type="password" id="password" placeholder="Contraseña">
+        
+        <button id="btn-main" class="btn-add" onclick="handleAuth()">Iniciar Sesión</button>
+        <button id="btn-toggle" class="btn-alt" onclick="toggleMode()">No tengo cuenta, quiero registrarme</button>
+        <p id="auth-msg" style="color: #e74c3c; font-size: 0.8rem; margin-top: 10px;"></p>
     </div>
 
     <div id="main-app" style="display: none;">
         <div class="dashboard">
             <small style="opacity: 0.8">DISPONIBLE REAL</small>
             <h1 id="txtSaldo">$ 0</h1>
-            <div style="display: flex; gap: 5px; justify-content: center; align-items: center;">
+            <div style="display: flex; gap: 5px; justify-content: center;">
                 <input type="number" id="inSueldo" placeholder="Sueldo" style="width:130px; background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.2); color:white; margin:0; text-align:center;">
-                <button onclick="saveSueldo()" style="background:var(--primary); border:none; color:white; padding:10px; border-radius:8px; cursor:pointer; font-weight:bold;">✔</button>
+                <button onclick="saveSueldo()" style="background:var(--primary); border:none; color:white; padding:10px; border-radius:8px; cursor:pointer;">✔</button>
             </div>
-            <button onclick="logout()" style="margin-top:15px; background:none; border:none; color:#ff7675; cursor:pointer; font-size:0.8rem; font-weight:bold;">[ CERRAR SESIÓN ]</button>
+            <button onclick="logout()" style="margin-top:15px; background:none; border:none; color:#ff7675; cursor:pointer; font-size:0.8rem;">[ CERRAR SESIÓN ]</button>
         </div>
 
         <div class="tabs">
             <button class="tab-btn active" onclick="showView('v-list', this)">Mis Pagos</button>
             <button class="tab-btn" onclick="showView('v-add', this)">+ Nuevo</button>
-            <button class="tab-btn" onclick="showView('v-config', this)">Ajustes</button>
         </div>
 
         <div id="v-list" class="view active">
             <div id="listaContenido"></div>
-            <button onclick="cerrarMes()" style="width:100%; padding:15px; background:#6366f1; color:white; border:none; border-radius:12px; font-weight:bold; cursor:pointer; margin-top:20px;">✨ CERRAR MES Y AVANZAR CUOTAS</button>
+            <button onclick="cerrarMes()" style="width:100%; padding:15px; background:#6366f1; color:white; border:none; border-radius:12px; font-weight:bold; cursor:pointer; margin-top:20px;">Cerrar Mes</button>
         </div>
 
         <div id="v-add" class="view">
-            <div class="form">
+            <div style="background: #f8fafc; padding: 15px; border-radius: 15px;">
                 <h3>Añadir Gasto</h3>
-                <select id="tipoGasto" style="width:100%; padding:12px; margin-bottom:10px; border-radius:8px; border:1px solid #ddd;">
-                    <option value="fijo">Gasto Fijo (Mensual)</option>
-                    <option value="cuota">Deuda por Cuotas (Temporal)</option>
+                <select id="tipoGasto" onchange="checkTipo()">
+                    <option value="fijo">Gasto Fijo</option>
+                    <option value="cuota">Cuotas</option>
                 </select>
-                <input type="text" id="gDesc" placeholder="Descripción (ej. Cuota Carro)">
+                <input type="text" id="gDesc" placeholder="Descripción">
                 <input type="number" id="gMonto" placeholder="Monto $">
-                <input type="text" id="gExtra" placeholder="Extra (ej. Cuenta o Banco)">
+                <input type="text" id="gExtra" placeholder="Banco o Detalle">
                 <div id="divCuotas" style="display:none;">
-                    <input type="number" id="gTotal" placeholder="Total de cuotas">
-                    <input type="number" id="gActual" placeholder="Cuota actual">
+                    <input type="number" id="gTotal" placeholder="Cuotas Totales">
+                    <input type="number" id="gActual" placeholder="Cuota Actual">
                 </div>
-                <button class="btn-add" onclick="saveItem()">Guardar en la Nube</button>
-            </div>
-        </div>
-
-        <div id="v-config" class="view">
-            <div class="form">
-                <p><b>Zona de Peligro</b></p>
-                <button onclick="clearAll()" style="background:#ff7675; color:white; border:none; padding:10px; border-radius:8px; width:100%; cursor:pointer;">Borrar todos mis datos</button>
+                <button class="btn-add" onclick="saveItem()">Guardar Gasto</button>
             </div>
         </div>
     </div>
 </div>
 
 <script>
-    // CONFIGURACIÓN DE FIREBASE
     const firebaseConfig = {
         apiKey: "AIzaSyCK-3pbwqS7QkExbTuT8bLmVKMlqO-govk",
         authDomain: "appd-111a4.firebaseapp.com",
@@ -121,37 +108,46 @@
     const auth = firebase.auth();
     const db = firebase.firestore();
 
+    let isLoginMode = true;
     let currentUser = null;
     let pagadosLocal = {};
 
-    // LOGIN
-    function login() {
-        const e = document.getElementById('email').value;
-        const p = document.getElementById('password').value;
-        if(!e || !p) return alert("Completa los datos");
-        document.getElementById('loader').style.display = 'block';
-        auth.signInWithEmailAndPassword(e, p).catch(err => {
-            alert("Error: " + err.message);
-            document.getElementById('loader').style.display = 'none';
-        });
+    function toggleMode() {
+        isLoginMode = !isLoginMode;
+        document.getElementById('auth-title').innerText = isLoginMode ? "Bienvenido" : "Crear Cuenta";
+        document.getElementById('auth-desc').innerText = isLoginMode ? "Ingresa a tus finanzas" : "Regístrate para empezar";
+        document.getElementById('btn-main').innerText = isLoginMode ? "Iniciar Sesión" : "Registrarse Ahora";
+        document.getElementById('btn-toggle').innerText = isLoginMode ? "No tengo cuenta, quiero registrarme" : "Ya tengo cuenta, quiero ingresar";
     }
 
-    function logout() { auth.signOut(); }
+    async function handleAuth() {
+        const e = document.getElementById('email').value;
+        const p = document.getElementById('password').value;
+        const msg = document.getElementById('auth-msg');
+        msg.innerText = "Cargando...";
 
-    // DETECTAR USUARIO
+        try {
+            if (isLoginMode) {
+                await auth.signInWithEmailAndPassword(e, p);
+            } else {
+                await auth.createUserWithEmailAndPassword(e, p);
+            }
+        } catch (err) {
+            msg.innerText = "Error: " + err.message;
+        }
+    }
+
+    function logout() { auth.signOut(); location.reload(); }
+
     auth.onAuthStateChanged(user => {
         if (user) {
             currentUser = user;
-            document.getElementById('login-screen').style.display = 'none';
+            document.getElementById('auth-container').style.display = 'none';
             document.getElementById('main-app').style.display = 'block';
             loadData();
-        } else {
-            document.getElementById('login-screen').style.display = 'block';
-            document.getElementById('main-app').style.display = 'none';
         }
     });
 
-    // GUARDAR GASTO
     async function saveItem() {
         const tipo = document.getElementById('tipoGasto').value;
         const data = {
@@ -171,17 +167,11 @@
         showView('v-list', document.querySelector('.tab-btn'));
     }
 
-    // CARGAR DATOS
     async function loadData() {
-        // Cargar Sueldo
         const userDoc = await db.collection('usuarios').doc(currentUser.uid).get();
-        let sueldo = 0;
-        if(userDoc.exists) {
-            sueldo = userDoc.data().sueldo || 0;
-            document.getElementById('inSueldo').value = sueldo;
-        }
+        let sueldo = userDoc.exists ? (userDoc.data().sueldo || 0) : 0;
+        document.getElementById('inSueldo').value = sueldo;
 
-        // Cargar Gastos
         const snapshot = await db.collection('usuarios').doc(currentUser.uid).collection('gastos').get();
         const container = document.getElementById('listaContenido');
         container.innerHTML = "";
@@ -190,30 +180,20 @@
         snapshot.forEach(doc => {
             const g = doc.data();
             const id = doc.id;
-            const isPagado = pagadosLocal[id];
-            if(isPagado) totalGastado += g.monto;
-
+            if(pagadosLocal[id]) totalGastado += g.monto;
             container.innerHTML += `
-                <div class="card ${g.tipo} ${isPagado ? 'pagado' : ''}">
-                    <div class="info">
-                        <b>${g.desc}</b>
-                        <small>${g.tipo === 'fijo' ? g.extra : 'Cuota '+g.actual+' de '+g.total}</small>
-                    </div>
-                    <button class="btn-check" onclick="togglePago('${id}')">
-                        $${g.monto.toLocaleString()}
-                    </button>
+                <div class="card ${g.tipo} ${pagadosLocal[id] ? 'pagado' : ''}">
+                    <div style="font-size:0.9rem"><b>${g.desc}</b><br><small>${g.tipo === 'fijo' ? g.extra : 'Cuota '+g.actual+' de '+g.total}</small></div>
+                    <button class="btn-check" onclick="togglePago('${id}')">$${g.monto.toLocaleString()}</button>
                 </div>`;
         });
-
         const saldo = sueldo - totalGastado;
-        const txt = document.getElementById('txtSaldo');
-        txt.innerText = `$ ${saldo.toLocaleString()}`;
-        txt.style.color = saldo < 0 ? "#ff7675" : "#2ecc71";
+        document.getElementById('txtSaldo').innerText = `$ ${saldo.toLocaleString()}`;
+        document.getElementById('txtSaldo').style.color = saldo < 0 ? "#e74c3c" : "#2ecc71";
     }
 
     function togglePago(id) {
-        if(pagadosLocal[id]) delete pagadosLocal[id];
-        else pagadosLocal[id] = true;
+        pagadosLocal[id] = !pagadosLocal[id];
         loadData();
     }
 
@@ -230,25 +210,18 @@
         btn.classList.add('active');
     }
 
-    // Toggle campos de cuotas
-    document.getElementById('tipoGasto').onchange = function() {
-        document.getElementById('divCuotas').style.display = this.value === 'cuota' ? 'block' : 'none';
-    };
+    function checkTipo() {
+        document.getElementById('divCuotas').style.display = document.getElementById('tipoGasto').value === 'cuota' ? 'block' : 'none';
+    }
 
     async function cerrarMes() {
-        if(!confirm("¿Cerrar mes? Las cuotas pagadas aumentarán 1 número.")) return;
+        if(!confirm("¿Cerrar mes?")) return;
         const snapshot = await db.collection('usuarios').doc(currentUser.uid).collection('gastos').get();
-        
         for (const doc of snapshot.docs) {
             const g = doc.data();
             if(g.tipo === 'cuota' && pagadosLocal[doc.id]) {
-                if(g.actual >= g.total) {
-                    await db.collection('usuarios').doc(currentUser.uid).collection('gastos').doc(doc.id).delete();
-                } else {
-                    await db.collection('usuarios').doc(currentUser.uid).collection('gastos').doc(doc.id).update({
-                        actual: g.actual + 1
-                    });
-                }
+                if(g.actual >= g.total) await db.collection('usuarios').doc(currentUser.uid).collection('gastos').doc(doc.id).delete();
+                else await db.collection('usuarios').doc(currentUser.uid).collection('gastos').doc(doc.id).update({ actual: g.actual + 1 });
             }
         }
         pagadosLocal = {};
