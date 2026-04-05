@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Finanzas Master - Calculadora Inteligente</title>
+    <title>Finanzas Master Pro - Auditoría</title>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
@@ -13,30 +13,32 @@
         body { font-family: 'Segoe UI', sans-serif; background: var(--bg); margin: 0; padding: 10px; display: flex; justify-content: center; }
         .app { background: white; width: 100%; max-width: 500px; padding: 20px; border-radius: 25px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); min-height: 90vh; }
         
-        .dashboard { background: var(--dark); color: white; padding: 25px; border-radius: 20px; text-align: center; margin-bottom: 15px; }
-        .dashboard h1 { margin: 10px 0; font-size: 2.2rem; color: var(--primary); }
+        .dashboard { background: var(--dark); color: white; padding: 20px; border-radius: 20px; text-align: center; margin-bottom: 15px; }
+        .dashboard h1 { margin: 5px 0; font-size: 2rem; color: var(--primary); }
         
-        .tabs { display: flex; gap: 5px; margin-bottom: 15px; }
-        .tab-btn { flex: 1; padding: 12px; border: none; border-radius: 10px; cursor: pointer; background: #e2e8f0; font-weight: bold; font-size: 0.75rem; }
+        .tabs { display: flex; gap: 4px; margin-bottom: 15px; overflow-x: auto; padding-bottom: 5px; }
+        .tab-btn { flex: 1; padding: 10px 5px; border: none; border-radius: 10px; cursor: pointer; background: #e2e8f0; font-weight: bold; font-size: 0.65rem; min-width: 70px; }
         .tab-btn.active { background: var(--dark); color: white; }
 
         .view { display: none; }
         .view.active { display: block; }
         
-        input, select { width: 100%; padding: 12px; margin-bottom: 10px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; font-size: 1rem; }
+        input, select { width: 100%; padding: 12px; margin-bottom: 10px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; font-size: 0.9rem; }
         .btn-add { width: 100%; padding: 14px; background: var(--dark); color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; }
         
-        .card { display: flex; justify-content: space-between; align-items: center; background: white; padding: 15px; margin-bottom: 10px; border-radius: 12px; border: 1px solid #f1f5f9; border-left: 6px solid #ddd; }
+        .card { display: flex; justify-content: space-between; align-items: center; background: white; padding: 12px; margin-bottom: 8px; border-radius: 12px; border: 1px solid #f1f5f9; border-left: 6px solid #ddd; font-size: 0.85rem; }
         .card.fijo { border-left-color: var(--fijo); }
         .card.cuota { border-left-color: var(--tc); }
-        .card.pagado { background: #ecfdf5; opacity: 0.6; border-color: #a7f3d0; }
+        .card.ocio { border-left-color: var(--ocio); }
+        .card.pagado { background: #ecfdf5; opacity: 0.6; }
         
-        .actions { display: flex; gap: 10px; align-items: center; }
-        .btn-edit { background: none; border: none; cursor: pointer; font-size: 1.2rem; }
-        .btn-check { background: #f1f5f9; border: none; padding: 8px 12px; border-radius: 8px; cursor: pointer; font-weight: bold; }
+        .actions { display: flex; gap: 8px; }
+        .btn-edit { background: #f1f5f9; border: none; padding: 6px; border-radius: 6px; cursor: pointer; }
+        .btn-check { background: #f1f5f9; border: none; padding: 6px 10px; border-radius: 8px; cursor: pointer; font-weight: bold; }
         .pagado .btn-check { background: var(--primary); color: white; }
 
-        #auth-container { text-align: center; padding: 40px 10px; }
+        .report-item { display: flex; justify-content: space-between; padding: 10px; border-bottom: 1px solid #eee; font-size: 0.9rem; }
+        .logout-link { color: #ff7675; cursor: pointer; font-size: 0.65rem; display: block; margin-top: 10px; text-decoration: underline; }
     </style>
 </head>
 <body>
@@ -46,7 +48,7 @@
         <h2>Finanzas Master</h2>
         <input type="email" id="email" placeholder="Correo">
         <input type="password" id="password" placeholder="Clave">
-        <button class="btn-add" onclick="handleAuth()">Entrar / Registrarse</button>
+        <button class="btn-add" onclick="handleAuth()">Ingresar</button>
     </div>
 
     <div id="main-app" style="display: none;">
@@ -54,46 +56,75 @@
             <small>DISPONIBLE REAL</small>
             <h1 id="txtSaldo">$ 0</h1>
             <div style="display: flex; gap: 5px; justify-content: center;">
-                <input type="number" id="inSueldo" placeholder="Sueldo" style="width:130px; background:rgba(255,255,255,0.1); border:none; color:white; text-align:center;">
-                <button onclick="saveSueldo()" style="background:var(--primary); border:none; color:white; padding:10px; border-radius:8px;">✔</button>
+                <input type="number" id="inSueldo" style="width:110px; background:rgba(255,255,255,0.1); border:none; color:white; text-align:center; border-radius:5px;">
+                <button onclick="saveSueldo()" style="background:var(--primary); border:none; color:white; padding:5px 10px; border-radius:5px;">✔</button>
             </div>
+            <a class="logout-link" onclick="logout()">Cerrar Sesión</a>
         </div>
 
         <div class="tabs">
             <button class="tab-btn active" onclick="showView('v-list', this)">Pagos</button>
+            <button class="tab-btn" onclick="showView('v-ocio', this)">Ocio</button>
             <button class="tab-btn" onclick="showView('v-add', this)">+ Nuevo</button>
+            <button class="tab-btn" onclick="showView('v-report', this)">Bancos</button>
+            <button class="tab-btn" onclick="showView('v-history', this)">Histórico</button>
         </div>
 
         <div id="v-list" class="view active">
-            <div id="listaContenido"></div>
-            <button onclick="cerrarMes()" style="width:100%; padding:15px; background:#6366f1; color:white; border:none; border-radius:12px; font-weight:bold; margin-top:20px;">CERRAR MES</button>
+            <div id="listaPagos"></div>
+            <button onclick="cerrarMes()" style="width:100%; padding:15px; background:#6366f1; color:white; border:none; border-radius:12px; font-weight:bold; margin-top:15px;">CERRAR MES</button>
+        </div>
+
+        <div id="v-ocio" class="view">
+            <div id="listaOcio"></div>
+        </div>
+
+        <div id="v-report" class="view">
+            <h3>Gastos por Banco</h3>
+            <div id="reporteBancos"></div>
+        </div>
+
+        <div id="v-history" class="view">
+            <h3>Historial de Meses</h3>
+            <div id="listaHistorico"></div>
         </div>
 
         <div id="v-add" class="view">
             <div style="background: #f8fafc; padding: 15px; border-radius: 15px;">
-                <h3 id="formTitle">Nuevo Gasto</h3>
+                <h3 id="formTitle">Nuevo Registro</h3>
                 <input type="hidden" id="editId">
-                <select id="tipoGasto" onchange="checkTipo()">
-                    <option value="fijo">Gasto Fijo (Servicios/Arriendo)</option>
-                    <option value="cuota">Deuda por Cuotas (Iberia/Bancos)</option>
+                <select id="tipoGasto" onchange="checkTipoForm()">
+                    <option value="fijo">Gastos Fijo</option>
+                    <option value="cuota">Gastos TC (Cuotas)</option>
+                    <option value="ocio">OCIO (Gasto Diario)</option>
                 </select>
-                <input type="text" id="gDesc" placeholder="Descripción (ej. Iberia)">
+                <input type="text" id="gDesc" placeholder="Descripción">
                 
-                <div id="divFijo">
-                    <input type="number" id="gMontoFijo" placeholder="Valor del mes $">
+                <select id="gBanco">
+                    <option value="Daviplata">Daviplata</option>
+                    <option value="Nequi">Nequi</option>
+                    <option value="Dale">Dale</option>
+                    <option value="TC Rappi">TC Rappi</option>
+                    <option value="Bancolombia">Bancolombia</option>
+                    <option value="Davivienda">Davivienda</option>
+                    <option value="TC Davivienda">TC Davivienda</option>
+                    <option value="TC Exito">TC Exito</option>
+                    <option value="TC Bancolombia">TC Bancolombia</option>
+                </select>
+
+                <div id="f-monto">
+                    <input type="number" id="gMonto" placeholder="Monto $">
                 </div>
 
-                <div id="divCuotas" style="display:none;">
-                    <input type="number" id="gTotalPrestamo" placeholder="Valor total de la deuda $">
-                    <input type="number" id="gInteres" placeholder="% Interés mensual (ej. 1.87)">
-                    <input type="number" id="gCuotasTotales" placeholder="¿A cuántas cuotas?">
-                    <input type="number" id="gCuotaActual" placeholder="¿Qué cuota vas a pagar?">
-                    <p id="previewCuota" style="font-size: 0.8rem; color: var(--tc); font-weight: bold;"></p>
+                <div id="f-cuotas" style="display:none;">
+                    <input type="number" id="gTotalDeuda" placeholder="Total Deuda $">
+                    <input type="number" id="gInteres" placeholder="% Interés">
+                    <input type="number" id="gCuotasT" placeholder="Cuotas Totales">
+                    <input type="number" id="gCuotaA" placeholder="Cuota Actual">
                 </div>
                 
-                <input type="text" id="gExtra" placeholder="Detalle extra">
-                <button class="btn-add" onclick="saveItem()" id="btnGuardar">Guardar Registro</button>
-                <button class="btn-add" style="background:#ccc; margin-top:5px; display:none;" id="btnCancelar" onclick="cancelarEdicion()">Cancelar</button>
+                <button class="btn-add" onclick="saveItem()" id="btnGuardar">Guardar</button>
+                <button class="btn-add" style="background:#ccc; margin-top:5px; display:none;" id="btnCancel" onclick="clearForm()">Cancelar</button>
             </div>
         </div>
     </div>
@@ -112,68 +143,103 @@
     firebase.initializeApp(firebaseConfig);
     const auth = firebase.auth();
     const db = firebase.firestore();
-
     let currentUser = null;
     let pagadosLocal = JSON.parse(localStorage.getItem('pagados_fb')) || {};
 
     async function handleAuth() {
         const e = document.getElementById('email').value;
         const p = document.getElementById('password').value;
-        try {
-            await auth.signInWithEmailAndPassword(e, p);
-        } catch {
-            await auth.createUserWithEmailAndPassword(e, p);
-        }
+        try { await auth.signInWithEmailAndPassword(e, p); } catch { await auth.createUserWithEmailAndPassword(e, p); }
     }
+    function logout() { auth.signOut(); location.reload(); }
 
     auth.onAuthStateChanged(user => {
-        if (user) { currentUser = user; document.getElementById('auth-container').style.display = 'none'; document.getElementById('main-app').style.display = 'block'; loadData(); }
+        if (user) { currentUser = user; document.getElementById('auth-container').style.display='none'; document.getElementById('main-app').style.display='block'; loadData(); }
     });
 
-    function checkTipo() {
-        const tipo = document.getElementById('tipoGasto').value;
-        document.getElementById('divFijo').style.display = tipo === 'fijo' ? 'block' : 'none';
-        document.getElementById('divCuotas').style.display = tipo === 'cuota' ? 'block' : 'none';
+    function checkTipoForm() {
+        const t = document.getElementById('tipoGasto').value;
+        document.getElementById('f-cuotas').style.display = t === 'cuota' ? 'block' : 'none';
+        document.getElementById('f-monto').style.display = t === 'cuota' ? 'none' : 'block';
     }
 
-    // FÓRMULA FRANCESA (AMORTIZACIÓN)
-    function calcularCuotaMensual(p, i, n) {
-        if (!p || !i || !n) return 0;
-        const tasa = i / 100;
-        return (p * tasa * Math.pow(1 + tasa, n)) / (Math.pow(1 + tasa, n) - 1);
+    function calcCuota(p, i, n) {
+        if(!p || !i || !n) return 0;
+        const r = i / 100;
+        return (p * r * Math.pow(1+r, n)) / (Math.pow(1+r, n) - 1);
     }
 
     async function saveItem() {
         const id = document.getElementById('editId').value;
         const tipo = document.getElementById('tipoGasto').value;
-        let montoFinal = 0;
         let data = {
             desc: document.getElementById('gDesc').value,
-            extra: document.getElementById('gExtra').value,
+            banco: document.getElementById('gBanco').value,
             tipo: tipo,
-            createdAt: Date.now()
+            updatedAt: Date.now()
         };
 
-        if(tipo === 'fijo') {
-            montoFinal = parseFloat(document.getElementById('gMontoFijo').value);
-        } else {
-            const p = parseFloat(document.getElementById('gTotalPrestamo').value);
+        if(tipo === 'cuota') {
+            const p = parseFloat(document.getElementById('gTotalDeuda').value);
             const i = parseFloat(document.getElementById('gInteres').value);
-            const n = parseInt(document.getElementById('gCuotasTotales').value);
-            montoFinal = calcularCuotaMensual(p, i, n);
-            data.valorTotal = p;
-            data.interes = i;
-            data.nCuotas = n;
-            data.actual = parseInt(document.getElementById('gCuotaActual').value);
+            const n = parseInt(document.getElementById('gCuotasT').value);
+            data.monto = calcCuota(p, i, n);
+            data.totalDeuda = p; data.interes = i; data.cuotasT = n;
+            data.cuotaA = parseInt(document.getElementById('gCuotaA').value);
+        } else {
+            data.monto = parseFloat(document.getElementById('gMonto').value);
         }
-        data.monto = montoFinal;
 
         if(id) await db.collection('usuarios').doc(currentUser.uid).collection('gastos').doc(id).update(data);
         else await db.collection('usuarios').doc(currentUser.uid).collection('gastos').add(data);
         
-        cancelarEdicion();
-        loadData();
-        showView('v-list', document.querySelector('.tab-btn'));
+        clearForm(); loadData(); showView('v-list', document.querySelector('.tab-btn'));
+    }
+
+    async function loadData() {
+        const userDoc = await db.collection('usuarios').doc(currentUser.uid).get();
+        let sueldo = userDoc.exists ? (userDoc.data().sueldo || 0) : 0;
+        document.getElementById('inSueldo').value = sueldo;
+
+        const snap = await db.collection('usuarios').doc(currentUser.uid).collection('gastos').get();
+        const listP = document.getElementById('listaPagos');
+        const listO = document.getElementById('listaOcio');
+        const repB = document.getElementById('reporteBancos');
+        listP.innerHTML = ""; listO.innerHTML = ""; repB.innerHTML = "";
+        
+        let totalResta = 0;
+        let bancosSum = {};
+
+        snap.forEach(doc => {
+            const g = doc.data(); const id = doc.id;
+            // Sumar a bancos si está pagado u ocio
+            if(g.tipo === 'ocio' || pagadosLocal[id]) {
+                bancosSum[g.banco] = (bancosSum[g.banco] || 0) + g.monto;
+                totalResta += g.monto;
+            }
+
+            const cardHtml = `
+                <div class="card ${g.tipo} ${pagadosLocal[id] ? 'pagado' : ''}">
+                    <div style="flex:1"><b>${g.desc}</b><br><small>${g.banco} ${g.tipo==='cuota'?'('+g.cuotaA+'/'+g.cuotasT+')':''}</small></div>
+                    <div class="actions">
+                        <button class="btn-edit" onclick="editItem('${id}')">✎</button>
+                        <button class="btn-check" onclick="togglePago('${id}')">$${Math.round(g.monto).toLocaleString()}</button>
+                    </div>
+                </div>`;
+            
+            if(g.tipo === 'ocio') listO.innerHTML += cardHtml;
+            else listP.innerHTML += cardHtml;
+        });
+
+        // Dibujar reporte bancos
+        for(let b in bancosSum) {
+            repB.innerHTML += `<div class="report-item"><span>${b}</span><b>$${Math.round(bancosSum[b]).toLocaleString()}</b></div>`;
+        }
+
+        const saldo = sueldo - totalResta;
+        document.getElementById('txtSaldo').innerText = `$ ${Math.round(saldo).toLocaleString()}`;
+        document.getElementById('txtSaldo').style.color = saldo < 0 ? "#e74c3c" : "#2ecc71";
+        loadHistory();
     }
 
     async function editItem(id) {
@@ -182,82 +248,77 @@
         document.getElementById('editId').value = id;
         document.getElementById('tipoGasto').value = g.tipo;
         document.getElementById('gDesc').value = g.desc;
-        document.getElementById('gExtra').value = g.extra;
-        
-        if(g.tipo === 'fijo') {
-            document.getElementById('gMontoFijo').value = g.monto;
-        } else {
-            document.getElementById('gTotalPrestamo').value = g.valorTotal;
+        document.getElementById('gBanco').value = g.banco;
+        if(g.tipo === 'cuota') {
+            document.getElementById('gTotalDeuda').value = g.totalDeuda;
             document.getElementById('gInteres').value = g.interes;
-            document.getElementById('gCuotasTotales').value = g.nCuotas;
-            document.getElementById('gCuotaActual').value = g.actual;
+            document.getElementById('gCuotasT').value = g.cuotasT;
+            document.getElementById('gCuotaA').value = g.cuotaA;
+        } else {
+            document.getElementById('gMonto').value = g.monto;
         }
-        
-        document.getElementById('formTitle').innerText = "Editando Registro";
-        document.getElementById('btnGuardar').innerText = "Actualizar Cambios";
-        document.getElementById('btnCancelar').style.display = "block";
-        checkTipo();
-        showView('v-add', document.querySelectorAll('.tab-btn')[1]);
+        checkTipoForm(); showView('v-add', document.querySelectorAll('.tab-btn')[2]);
+        document.getElementById('btnCancel').style.display = "block";
     }
 
-    function cancelarEdicion() {
+    function clearForm() {
         document.getElementById('editId').value = "";
         document.getElementById('gDesc').value = "";
-        document.getElementById('gMontoFijo').value = "";
-        document.getElementById('gTotalPrestamo').value = "";
-        document.getElementById('formTitle').innerText = "Nuevo Gasto";
-        document.getElementById('btnGuardar').innerText = "Guardar Registro";
-        document.getElementById('btnCancelar').style.display = "none";
-    }
-
-    async function loadData() {
-        const userDoc = await db.collection('usuarios').doc(currentUser.uid).get();
-        let sueldo = userDoc.exists ? (userDoc.data().sueldo || 0) : 0;
-        document.getElementById('inSueldo').value = sueldo;
-
-        const snapshot = await db.collection('usuarios').doc(currentUser.uid).collection('gastos').get();
-        const listCont = document.getElementById('listaContenido');
-        listCont.innerHTML = "";
-        let totalPagado = 0;
-
-        snapshot.forEach(doc => {
-            const g = doc.data();
-            const id = doc.id;
-            if(pagadosLocal[id]) totalPagado += g.monto;
-            
-            listCont.innerHTML += `
-                <div class="card ${g.tipo} ${pagadosLocal[id] ? 'pagado' : ''}">
-                    <div>
-                        <b>${g.desc}</b><br>
-                        <small>${g.tipo === 'fijo' ? g.extra : 'Cuota '+g.actual+' de '+g.nCuotas}</small>
-                    </div>
-                    <div class="actions">
-                        <button class="btn-edit" onclick="editItem('${id}')">✎</button>
-                        <button class="btn-check" onclick="togglePago('${id}')">$${Math.round(g.monto).toLocaleString()}</button>
-                    </div>
-                </div>`;
-        });
-        const saldo = sueldo - totalPagado;
-        document.getElementById('txtSaldo').innerText = `$ ${Math.round(saldo).toLocaleString()}`;
-        document.getElementById('txtSaldo').style.color = saldo < 0 ? "#e74c3c" : "#2ecc71";
+        document.getElementById('gMonto').value = "";
+        document.getElementById('btnCancel').style.display = "none";
     }
 
     function togglePago(id) { pagadosLocal[id] = !pagadosLocal[id]; localStorage.setItem('pagados_fb', JSON.stringify(pagadosLocal)); loadData(); }
-    async function saveSueldo() { await db.collection('usuarios').doc(currentUser.uid).set({ sueldo: parseFloat(document.getElementById('inSueldo').value) }, { merge: true }); loadData(); }
+    async function saveSueldo() { await db.collection('usuarios').doc(currentUser.uid).set({sueldo: parseFloat(document.getElementById('inSueldo').value)}, {merge:true}); loadData(); }
     function showView(id, btn) { document.querySelectorAll('.view').forEach(v => v.classList.remove('active')); document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active')); document.getElementById(id).classList.add('active'); btn.classList.add('active'); }
 
     async function cerrarMes() {
-        if(!confirm("¿Avanzar al siguiente mes?")) return;
-        const snapshot = await db.collection('usuarios').doc(currentUser.uid).collection('gastos').get();
-        for (const doc of snapshot.docs) {
+        const mesNombre = prompt("¿Cómo quieres llamar a este histórico? (Ej: Marzo 2026)");
+        if(!mesNombre) return;
+
+        const snap = await db.collection('usuarios').doc(currentUser.uid).collection('gastos').get();
+        let totalMes = 0;
+        let detalles = [];
+
+        for (const doc of snap.docs) {
             const g = doc.data();
-            if(g.tipo === 'cuota' && pagadosLocal[doc.id]) {
-                if(g.actual >= g.nCuotas) await db.collection('usuarios').doc(currentUser.uid).collection('gastos').doc(doc.id).delete();
-                else await db.collection('usuarios').doc(currentUser.uid).collection('gastos').doc(doc.id).update({ actual: g.actual + 1 });
+            if(g.tipo === 'ocio' || pagadosLocal[doc.id]) {
+                totalMes += g.monto;
+                detalles.push(`${g.desc}: $${Math.round(g.monto)}`);
             }
+            // Avanzar cuotas
+            if(g.tipo === 'cuota' && pagadosLocal[doc.id]) {
+                if(g.cuotaA >= g.cuotasT) await db.collection('usuarios').doc(currentUser.uid).collection('gastos').doc(doc.id).delete();
+                else await db.collection('usuarios').doc(currentUser.uid).collection('gastos').doc(doc.id).update({ cuotaA: g.cuotaA + 1 });
+            }
+            // Borrar ocio al cerrar mes
+            if(g.tipo === 'ocio') await db.collection('usuarios').doc(currentUser.uid).collection('gastos').doc(doc.id).delete();
         }
+
+        // Guardar Histórico
+        await db.collection('usuarios').doc(currentUser.uid).collection('historicos').add({
+            mes: mesNombre,
+            total: totalMes,
+            fecha: Date.now(),
+            resumen: detalles.slice(0, 5).join(", ") + "..." 
+        });
+
         pagadosLocal = {}; localStorage.setItem('pagados_fb', JSON.stringify(pagadosLocal));
         loadData();
+        alert("Mes cerrado y guardado en histórico.");
+    }
+
+    async function loadHistory() {
+        const snap = await db.collection('usuarios').doc(currentUser.uid).collection('historicos').orderBy('fecha', 'desc').get();
+        const cont = document.getElementById('listaHistorico');
+        cont.innerHTML = "";
+        snap.forEach(doc => {
+            const h = doc.data();
+            cont.innerHTML += `<div class="card" style="border-left-color:#6366f1">
+                <div style="flex:1"><b>${h.mes}</b><br><small>${h.resumen}</small></div>
+                <b>$${Math.round(h.total).toLocaleString()}</b>
+            </div>`;
+        });
     }
 </script>
 </body>
