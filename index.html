@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Finanzas Master - Registro Libre</title>
+    <title>Finanzas Master - Pro</title>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
@@ -17,7 +17,7 @@
         .dashboard h1 { margin: 10px 0; font-size: 2.2rem; color: var(--primary); }
         
         .tabs { display: flex; gap: 5px; margin-bottom: 15px; overflow-x: auto; padding-bottom: 5px; }
-        .tab-btn { flex: 1; padding: 12px; border: none; border-radius: 10px; cursor: pointer; background: #e2e8f0; font-weight: bold; font-size: 0.75rem; min-width: 85px; }
+        .tab-btn { flex: 1; padding: 12px; border: none; border-radius: 10px; cursor: pointer; background: #e2e8f0; font-weight: bold; font-size: 0.75rem; min-width: 80px; }
         .tab-btn.active { background: var(--dark); color: white; }
 
         .view { display: none; }
@@ -30,11 +30,13 @@
         .card { display: flex; justify-content: space-between; align-items: center; background: white; padding: 15px; margin-bottom: 10px; border-radius: 12px; border: 1px solid #f1f5f9; border-left: 6px solid #ddd; }
         .card.fijo { border-left-color: var(--fijo); }
         .card.cuota { border-left-color: var(--tc); }
+        .card.ocio { border-left-color: var(--ocio); }
         .card.pagado { background: #ecfdf5; opacity: 0.6; border-color: #a7f3d0; }
         
         .btn-check { background: #f1f5f9; border: none; padding: 8px 12px; border-radius: 8px; cursor: pointer; font-weight: bold; }
         .pagado .btn-check { background: var(--primary); color: white; }
 
+        .section-title { font-size: 0.8rem; font-weight: bold; color: #64748b; text-transform: uppercase; margin: 15px 0 5px; }
         #auth-container { text-align: center; padding: 40px 10px; }
     </style>
 </head>
@@ -43,52 +45,56 @@
 <div class="app">
     <div id="auth-container">
         <h2 id="auth-title">Bienvenido</h2>
-        <p id="auth-desc" style="color: #64748b; margin-bottom: 20px;">Ingresa a tus finanzas</p>
-        
         <input type="email" id="email" placeholder="Correo electrónico">
         <input type="password" id="password" placeholder="Contraseña">
-        
         <button id="btn-main" class="btn-add" onclick="handleAuth()">Iniciar Sesión</button>
-        <button id="btn-toggle" class="btn-alt" onclick="toggleMode()">No tengo cuenta, quiero registrarme</button>
-        <p id="auth-msg" style="color: #e74c3c; font-size: 0.8rem; margin-top: 10px;"></p>
+        <button id="btn-toggle" class="btn-alt" onclick="toggleMode()">Crear cuenta nueva</button>
     </div>
 
     <div id="main-app" style="display: none;">
         <div class="dashboard">
-            <small style="opacity: 0.8">DISPONIBLE REAL</small>
+            <small>DISPONIBLE REAL</small>
             <h1 id="txtSaldo">$ 0</h1>
             <div style="display: flex; gap: 5px; justify-content: center;">
                 <input type="number" id="inSueldo" placeholder="Sueldo" style="width:130px; background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.2); color:white; margin:0; text-align:center;">
                 <button onclick="saveSueldo()" style="background:var(--primary); border:none; color:white; padding:10px; border-radius:8px; cursor:pointer;">✔</button>
             </div>
-            <button onclick="logout()" style="margin-top:15px; background:none; border:none; color:#ff7675; cursor:pointer; font-size:0.8rem;">[ CERRAR SESIÓN ]</button>
+            <button onclick="logout()" style="margin-top:15px; background:none; border:none; color:#ff7675; cursor:pointer; font-size:0.7rem;">CERRAR SESIÓN</button>
         </div>
 
         <div class="tabs">
             <button class="tab-btn active" onclick="showView('v-list', this)">Mis Pagos</button>
-            <button class="tab-btn" onclick="showView('v-add', this)">+ Nuevo</button>
+            <button class="tab-btn" onclick="showView('v-add', this)">+ Gasto</button>
+            <button class="tab-btn" onclick="showView('v-ocio', this)">Ocio</button>
         </div>
 
         <div id="v-list" class="view active">
+            <div class="section-title">Fijos y Cuotas</div>
             <div id="listaContenido"></div>
             <button onclick="cerrarMes()" style="width:100%; padding:15px; background:#6366f1; color:white; border:none; border-radius:12px; font-weight:bold; cursor:pointer; margin-top:20px;">Cerrar Mes</button>
         </div>
 
+        <div id="v-ocio" class="view">
+            <div class="section-title">Gastos de Ocio</div>
+            <div id="listaOcio"></div>
+        </div>
+
         <div id="v-add" class="view">
             <div style="background: #f8fafc; padding: 15px; border-radius: 15px;">
-                <h3>Añadir Gasto</h3>
+                <h3>Nuevo Registro</h3>
                 <select id="tipoGasto" onchange="checkTipo()">
                     <option value="fijo">Gasto Fijo</option>
-                    <option value="cuota">Cuotas</option>
+                    <option value="cuota">Deuda por Cuotas</option>
+                    <option value="ocio">Gasto de Ocio (Diario)</option>
                 </select>
                 <input type="text" id="gDesc" placeholder="Descripción">
                 <input type="number" id="gMonto" placeholder="Monto $">
-                <input type="text" id="gExtra" placeholder="Banco o Detalle">
+                <input type="text" id="gExtra" placeholder="Detalle (Banco, lugar, etc)">
                 <div id="divCuotas" style="display:none;">
                     <input type="number" id="gTotal" placeholder="Cuotas Totales">
                     <input type="number" id="gActual" placeholder="Cuota Actual">
                 </div>
-                <button class="btn-add" onclick="saveItem()">Guardar Gasto</button>
+                <button class="btn-add" onclick="saveItem()">Guardar Registro</button>
             </div>
         </div>
     </div>
@@ -110,31 +116,22 @@
 
     let isLoginMode = true;
     let currentUser = null;
-    let pagadosLocal = {};
+    let pagadosLocal = JSON.parse(localStorage.getItem('pagados_fb')) || {};
 
     function toggleMode() {
         isLoginMode = !isLoginMode;
         document.getElementById('auth-title').innerText = isLoginMode ? "Bienvenido" : "Crear Cuenta";
-        document.getElementById('auth-desc').innerText = isLoginMode ? "Ingresa a tus finanzas" : "Regístrate para empezar";
         document.getElementById('btn-main').innerText = isLoginMode ? "Iniciar Sesión" : "Registrarse Ahora";
-        document.getElementById('btn-toggle').innerText = isLoginMode ? "No tengo cuenta, quiero registrarme" : "Ya tengo cuenta, quiero ingresar";
+        document.getElementById('btn-toggle').innerText = isLoginMode ? "Registrarme" : "Ya tengo cuenta";
     }
 
     async function handleAuth() {
         const e = document.getElementById('email').value;
         const p = document.getElementById('password').value;
-        const msg = document.getElementById('auth-msg');
-        msg.innerText = "Cargando...";
-
         try {
-            if (isLoginMode) {
-                await auth.signInWithEmailAndPassword(e, p);
-            } else {
-                await auth.createUserWithEmailAndPassword(e, p);
-            }
-        } catch (err) {
-            msg.innerText = "Error: " + err.message;
-        }
+            if (isLoginMode) await auth.signInWithEmailAndPassword(e, p);
+            else await auth.createUserWithEmailAndPassword(e, p);
+        } catch (err) { alert(err.message); }
     }
 
     function logout() { auth.signOut(); location.reload(); }
@@ -147,6 +144,12 @@
             loadData();
         }
     });
+
+    async function saveSueldo() {
+        const val = parseFloat(document.getElementById('inSueldo').value) || 0;
+        await db.collection('usuarios').doc(currentUser.uid).set({ sueldo: val }, { merge: true });
+        loadData();
+    }
 
     async function saveItem() {
         const tipo = document.getElementById('tipoGasto').value;
@@ -162,9 +165,9 @@
             data.actual = parseInt(document.getElementById('gActual').value);
         }
         await db.collection('usuarios').doc(currentUser.uid).collection('gastos').add(data);
-        alert("¡Guardado!");
-        loadData();
+        document.getElementById('gDesc').value = ""; document.getElementById('gMonto').value = "";
         showView('v-list', document.querySelector('.tab-btn'));
+        loadData();
     }
 
     async function loadData() {
@@ -172,21 +175,32 @@
         let sueldo = userDoc.exists ? (userDoc.data().sueldo || 0) : 0;
         document.getElementById('inSueldo').value = sueldo;
 
-        const snapshot = await db.collection('usuarios').doc(currentUser.uid).collection('gastos').get();
-        const container = document.getElementById('listaContenido');
-        container.innerHTML = "";
+        const snapshot = await db.collection('usuarios').doc(currentUser.uid).collection('gastos').orderBy('createdAt', 'desc').get();
+        const listCont = document.getElementById('listaContenido');
+        const listOcio = document.getElementById('listaOcio');
+        listCont.innerHTML = ""; listOcio.innerHTML = "";
+        
         let totalGastado = 0;
 
         snapshot.forEach(doc => {
             const g = doc.data();
             const id = doc.id;
-            if(pagadosLocal[id]) totalGastado += g.monto;
-            container.innerHTML += `
-                <div class="card ${g.tipo} ${pagadosLocal[id] ? 'pagado' : ''}">
-                    <div style="font-size:0.9rem"><b>${g.desc}</b><br><small>${g.tipo === 'fijo' ? g.extra : 'Cuota '+g.actual+' de '+g.total}</small></div>
+            
+            if (g.tipo === 'ocio') {
+                totalGastado += g.monto;
+                listOcio.innerHTML += `<div class="card ocio">
+                    <div><b>${g.desc}</b><br><small>${g.extra}</small></div>
+                    <b>$${g.monto.toLocaleString()}</b>
+                </div>`;
+            } else {
+                if(pagadosLocal[id]) totalGastado += g.monto;
+                listCont.innerHTML += `<div class="card ${g.tipo} ${pagadosLocal[id] ? 'pagado' : ''}">
+                    <div><b>${g.desc}</b><br><small>${g.tipo === 'fijo' ? g.extra : 'Cuota '+g.actual+' de '+g.total}</small></div>
                     <button class="btn-check" onclick="togglePago('${id}')">$${g.monto.toLocaleString()}</button>
                 </div>`;
+            }
         });
+
         const saldo = sueldo - totalGastado;
         document.getElementById('txtSaldo').innerText = `$ ${saldo.toLocaleString()}`;
         document.getElementById('txtSaldo').style.color = saldo < 0 ? "#e74c3c" : "#2ecc71";
@@ -194,12 +208,7 @@
 
     function togglePago(id) {
         pagadosLocal[id] = !pagadosLocal[id];
-        loadData();
-    }
-
-    async function saveSueldo() {
-        const val = parseFloat(document.getElementById('inSueldo').value);
-        await db.collection('usuarios').doc(currentUser.uid).set({ sueldo: val }, { merge: true });
+        localStorage.setItem('pagados_fb', JSON.stringify(pagadosLocal));
         loadData();
     }
 
@@ -215,16 +224,17 @@
     }
 
     async function cerrarMes() {
-        if(!confirm("¿Cerrar mes?")) return;
+        if(!confirm("¿Cerrar mes? Esto avanzará las cuotas pagadas y borrará el ocio.")) return;
         const snapshot = await db.collection('usuarios').doc(currentUser.uid).collection('gastos').get();
         for (const doc of snapshot.docs) {
             const g = doc.data();
+            if(g.tipo === 'ocio') await db.collection('usuarios').doc(currentUser.uid).collection('gastos').doc(doc.id).delete();
             if(g.tipo === 'cuota' && pagadosLocal[doc.id]) {
                 if(g.actual >= g.total) await db.collection('usuarios').doc(currentUser.uid).collection('gastos').doc(doc.id).delete();
                 else await db.collection('usuarios').doc(currentUser.uid).collection('gastos').doc(doc.id).update({ actual: g.actual + 1 });
             }
         }
-        pagadosLocal = {};
+        pagadosLocal = {}; localStorage.setItem('pagados_fb', JSON.stringify(pagadosLocal));
         loadData();
     }
 </script>
